@@ -97,6 +97,9 @@ def compile_pit_by_coc():
     combined = combined[combined["year"].notna()]
     combined["year"] = combined["year"].astype(int)
 
+    # Drop total/footnote rows — keep only valid CoC codes (e.g. AK-500, CA-600)
+    combined = combined[combined["coc_number"].astype(str).str.match(r"^[A-Z]{2}-\d{3}$", na=False)]
+
     out_path = os.path.join(PROCESSED_DIR, "pit_by_coc.csv")
     combined.to_csv(out_path, index=False)
     print(f"Saved: {out_path} ({len(combined):,} rows)")
@@ -142,6 +145,16 @@ def compile_hic_by_coc():
     # Drop rows with no year
     combined = combined[combined["year"].notna()]
     combined["year"] = combined["year"].astype(int)
+
+    # Unify CoC identifier: early years used 'coc', later years used 'coc_number'
+    if "coc" in combined.columns and "coc_number" in combined.columns:
+        combined["coc_number"] = combined["coc_number"].fillna(combined["coc"])
+        combined.drop(columns=["coc"], inplace=True)
+    elif "coc" in combined.columns:
+        combined.rename(columns={"coc": "coc_number"}, inplace=True)
+
+    # Drop total/footnote rows — keep only valid CoC codes (e.g. AK-500)
+    combined = combined[combined["coc_number"].astype(str).str.match(r"^[A-Z]{2}-\d{3}$", na=False)]
 
     out_path = os.path.join(PROCESSED_DIR, "hic_by_coc.csv")
     combined.to_csv(out_path, index=False)
@@ -240,7 +253,8 @@ def compile_hic_core(hic_df):
 
     rows = []
     for _, row in hic_df.iterrows():
-        new_row = {"coc_number": row.get("coc_number") or row.get("coc"), "year": row["year"]}
+        coc = row.get("coc_number") if pd.notna(row.get("coc_number")) else row.get("coc")
+        new_row = {"coc_number": coc, "year": row["year"]}
         for std_name, candidates in MAPPINGS.items():
             val = None
             for c in candidates:
