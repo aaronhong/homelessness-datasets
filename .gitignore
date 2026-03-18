@@ -1,0 +1,19 @@
+# Raw data files - run scripts/download.py to regenerate
+data/raw/**/*.xlsx
+data/raw/**/*.xls
+data/raw/**/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.env
+venv/
+.venv/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# OS
+.DS_Store
