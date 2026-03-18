@@ -43,8 +43,18 @@ def compile_pit_by_coc():
     for sheet_name, df in sheets.items():
         # Each sheet is typically one year; sheet name is the year
         df = df.copy()
-        df.columns = [str(c).strip() if c is not None else f"col_{i}"
-                      for i, c in enumerate(df.columns)]
+        # Deduplicate column names
+        seen = {}
+        new_cols = []
+        for i, c in enumerate(df.columns):
+            name = str(c).strip() if c is not None else f"col_{i}"
+            if name in seen:
+                seen[name] += 1
+                name = f"{name}_{seen[name]}"
+            else:
+                seen[name] = 0
+            new_cols.append(name)
+        df.columns = new_cols
         df.dropna(how="all", inplace=True)
 
         # Detect year from sheet name (e.g. "2024", "2023")
@@ -98,8 +108,17 @@ def compile_hic_by_coc():
 
     combined = pd.concat(frames, ignore_index=True)
 
-    combined.columns = [str(c).lower().replace(" ", "_").replace("-", "_")
-                        for c in combined.columns]
+    seen = {}
+    new_cols = []
+    for c in combined.columns:
+        name = str(c).lower().replace(" ", "_").replace("-", "_")
+        if name in seen:
+            seen[name] += 1
+            name = f"{name}_{seen[name]}"
+        else:
+            seen[name] = 0
+        new_cols.append(name)
+    combined.columns = new_cols
 
     out_path = os.path.join(PROCESSED_DIR, "hic_by_coc.csv")
     combined.to_csv(out_path, index=False)
