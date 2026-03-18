@@ -9,11 +9,40 @@ Run download.py first to populate data/raw/.
 """
 
 import os
+import re
 import pandas as pd
 import pyxlsb
 
 RAW_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "raw")
 PROCESSED_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "processed")
+
+
+def clean_colname(name):
+    """Standardize a column name to snake_case with no special characters."""
+    name = str(name).lower().strip()
+    name = name.replace("/", "_")          # slashes → underscore
+    name = name.replace("-", "_")          # dashes → underscore
+    name = re.sub(r"[,.()\[\]]", "", name) # remove punctuation
+    name = re.sub(r"\s+", "_", name)       # spaces → underscore
+    name = re.sub(r"_+", "_", name)        # collapse multiple underscores
+    name = name.strip("_")                 # strip leading/trailing underscores
+    return name
+
+
+def clean_columns(df):
+    """Apply clean_colname to all columns, deduplicating if needed."""
+    seen = {}
+    new_cols = []
+    for c in df.columns:
+        name = clean_colname(c)
+        if name in seen:
+            seen[name] += 1
+            name = f"{name}_{seen[name]}"
+        else:
+            seen[name] = 0
+        new_cols.append(name)
+    df.columns = new_cols
+    return df
 
 
 def read_xlsb(path):
@@ -43,18 +72,7 @@ def compile_pit_by_coc():
     for sheet_name, df in sheets.items():
         # Each sheet is typically one year; sheet name is the year
         df = df.copy()
-        # Deduplicate column names
-        seen = {}
-        new_cols = []
-        for i, c in enumerate(df.columns):
-            name = str(c).strip() if c is not None else f"col_{i}"
-            if name in seen:
-                seen[name] += 1
-                name = f"{name}_{seen[name]}"
-            else:
-                seen[name] = 0
-            new_cols.append(name)
-        df.columns = new_cols
+        df = clean_columns(df)
         df.dropna(how="all", inplace=True)
 
         # Detect year from sheet name (e.g. "2024", "2023")
@@ -71,9 +89,7 @@ def compile_pit_by_coc():
 
     combined = pd.concat(frames, ignore_index=True)
 
-    # Standardize key column names to lowercase with underscores
-    combined.columns = [c.lower().replace(" ", "_").replace("-", "_")
-                        for c in combined.columns]
+    combined = clean_columns(combined)
 
     # Drop rows with no year (blank/header rows between sheets)
     combined = combined[combined["year"].notna()]
@@ -112,17 +128,7 @@ def compile_hic_by_coc():
 
     combined = pd.concat(frames, ignore_index=True)
 
-    seen = {}
-    new_cols = []
-    for c in combined.columns:
-        name = str(c).lower().replace(" ", "_").replace("-", "_")
-        if name in seen:
-            seen[name] += 1
-            name = f"{name}_{seen[name]}"
-        else:
-            seen[name] = 0
-        new_cols.append(name)
-    combined.columns = new_cols
+    combined = clean_columns(combined)
 
     # Drop rows with no year
     combined = combined[combined["year"].notna()]
