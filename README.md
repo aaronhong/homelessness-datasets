@@ -44,15 +44,15 @@ python scripts/compile.py
 
 | File | Rows | Columns | Years | Description |
 |---|---|---|---|---|
-| `pit_core.csv` | 6,923 | 26 | 2007–2024 | PIT core variables consistent across all years |
-| `hic_core.csv` | 7,450 | 11 | 2007–2024 | HIC bed counts by program type, harmonized across all years |
+| `pit_core.csv` | 6,866 | 26 | 2007–2024 | PIT core variables consistent across all years |
+| `hic_core.csv` | 7,431 | 11 | 2007–2024 | HIC bed counts by program type, harmonized across all years |
 
 ### Full panels (all variables)
 
 | File | Rows | Columns | Years | Description |
 |---|---|---|---|---|
-| `pit_by_coc.csv` | 6,923 | 1,409 | 2007–2024 | All PIT variables (many are year-specific) |
-| `hic_by_coc.csv` | 7,450 | 167 | 2007–2024 | All HIC variables (naming varies by era) |
+| `pit_by_coc.csv` | 6,866 | 1,409 | 2007–2024 | All PIT variables (many are year-specific) |
+| `hic_by_coc.csv` | 7,431 | 167 | 2007–2024 | All HIC variables (naming varies by era) |
 
 ---
 
