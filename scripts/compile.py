@@ -111,9 +111,16 @@ def compile_hic_by_coc():
 
     frames = []
     for sheet_name in xl.sheet_names:
-        df = xl.parse(sheet_name, header=0)
+        # Row 0 is a group header (merged cells); row 1 has the actual column names
+        df = xl.parse(sheet_name, header=1)
         df = df.copy()
         df.dropna(how="all", inplace=True)
+        if df.empty or len(df.columns) == 0:
+            continue
+        # Drop any rows where the CoC column is null or looks like a header repeat
+        coc_col = df.columns[0]
+        df = df[df[coc_col].notna()]
+        df = df[~df[coc_col].astype(str).str.contains("CoC", case=False, na=False)]
 
         year = None
         try:
