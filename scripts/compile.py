@@ -75,6 +75,10 @@ def compile_pit_by_coc():
     combined.columns = [c.lower().replace(" ", "_").replace("-", "_")
                         for c in combined.columns]
 
+    # Drop rows with no year (blank/header rows between sheets)
+    combined = combined[combined["year"].notna()]
+    combined["year"] = combined["year"].astype(int)
+
     out_path = os.path.join(PROCESSED_DIR, "pit_by_coc.csv")
     combined.to_csv(out_path, index=False)
     print(f"Saved: {out_path} ({len(combined):,} rows)")
@@ -119,6 +123,10 @@ def compile_hic_by_coc():
             seen[name] = 0
         new_cols.append(name)
     combined.columns = new_cols
+
+    # Drop rows with no year
+    combined = combined[combined["year"].notna()]
+    combined["year"] = combined["year"].astype(int)
 
     out_path = os.path.join(PROCESSED_DIR, "hic_by_coc.csv")
     combined.to_csv(out_path, index=False)
